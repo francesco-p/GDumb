@@ -79,6 +79,7 @@ def train(opt, loader, model, criterion, optimizer, epoch, logger):
             do_cutmix = opt.regularization == 'cutmix' and np.random.rand(1) < opt.cutmix_prob
             if do_cutmix: inputs, labels_a, labels_b, lam = cutmix_data(x=inputs, y=labels, alpha=opt.cutmix_alpha)
             data_time.update(time.time() - start)
+
             
             # Forward, backward passes then step
             outputs = model(inputs)
@@ -141,7 +142,8 @@ if __name__ == '__main__':
     # Scenario #2: Directly do continual learning from scratch
     else: 
         opt.num_classes = opt.num_classes_per_task*opt.num_tasks
-        if opt.inp_size == 28: model = getattr(mnist, opt.model)(opt)
+        if opt.inp_size == 28: 
+            model = getattr(mnist, opt.model)(opt)
         if opt.inp_size == 32 or opt.inp_size == 64: model = getattr(cifar, opt.model)(opt)
         if opt.inp_size ==224: model = getattr(imagenet, opt.model)(opt)  
     

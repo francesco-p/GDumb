@@ -22,8 +22,16 @@ class VisionDataset(object):
         self.class_order = class_order
         # Generates the standard data augmentation transforms
         train_augment, test_augment = get_augment_transforms(dataset=opt.dataset, inp_sz=opt.inp_size)
-        self.train_transforms = torchvision.transforms.Compose(train_augment + [torchvision.transforms.ToTensor(), torchvision.transforms.Normalize(mean, std)])
-        self.test_transforms = torchvision.transforms.Compose(test_augment + [torchvision.transforms.ToTensor(), torchvision.transforms.Normalize(mean, std)])
+
+
+        if opt.resize != -1:
+            self.train_transforms = torchvision.transforms.Compose(train_augment + [torchvision.transforms.Resize([opt.resize, opt.resize]), torchvision.transforms.ToTensor(), torchvision.transforms.Normalize(mean, std)])
+            self.test_transforms = torchvision.transforms.Compose(test_augment + [torchvision.transforms.Resize([opt.resize, opt.resize]), torchvision.transforms.ToTensor(), torchvision.transforms.Normalize(mean, std)])
+        else:
+            self.train_transforms = torchvision.transforms.Compose(train_augment + [torchvision.transforms.ToTensor(), torchvision.transforms.Normalize(mean, std)])
+            self.test_transforms = torchvision.transforms.Compose(test_augment + [torchvision.transforms.ToTensor(), torchvision.transforms.Normalize(mean, std)])
+            
+
 
         # Creates the supervised baseline dataloader (upper bound for continual learning methods)
         self.supervised_trainloader = self.get_loader(indices=None, transforms=self.train_transforms, train=True)
