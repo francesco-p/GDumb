@@ -13,12 +13,13 @@ def parse_args():
     parser.add_argument('--num_passes', type=int, required=True, help='Number of passes to train over the storage')
     parser.add_argument('--num_pretrain_passes', type=int, default=0, help='Number of passes to train over the storage')
     parser.add_argument('--regularization', type=str, default='none', choices=['none', 'cutmix'], help='Regularization types')
-    parser.add_argument('--model', type=str, default='MLP', choices=['MLP', 'ResNet', 'DenseNet', 'NIN'], help='Model architecture')
+    parser.add_argument('--model', type=str, default='MLP', choices=['MLP', 'ResNet', 'DenseNet', 'NIN', 'ELM_mnist'], help='Model architecture')
     parser.add_argument('--depth', type=int, default=0, help='Depth of the model')
     parser.add_argument('--width', type=int, default=0, help='Width of a model')
     parser.add_argument('--seed', type=int, default=0, help='Seed for reproducibility of class-setting etc')
     parser.add_argument('--exp_name', type=str, default='test', help='Experiment name')
     parser.add_argument('--old_exp_name', type=str, default='test', help='Name of experiment to take pretrained model from')
+    parser.add_argument('--emb', type=int, default=128, help='Embedding Size')
 
     # Default experiment options
     parser.add_argument('--maxlr', type=float, default=0.05, help='Starting Learning rate')

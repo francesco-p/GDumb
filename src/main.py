@@ -6,6 +6,28 @@ from models.layers import FinalBlock
 from torch import nn, optim
 from opts import parse_args
 from utils import AverageMeter, get_accuracy, cutmix_data, get_logger, seed_everything, save_model, load_model
+from models.layers import FCBlock, FinalBlock
+
+
+##############################
+class ELM_mnist(nn.Module):
+    def __init__(self, opt):
+        super(ELM_mnist, self).__init__()
+        self.orth_mat = torch.nn.init.orthogonal_(torch.empty(28*28, opt.emb)).to(torch.float16).to('cuda')
+
+        self.input = FCBlock(opt=opt, in_channels=opt.emb, out_channels=opt.width)
+        self.hidden1 = FCBlock(opt=opt, in_channels=opt.width, out_channels=opt.width)
+        self.final = FinalBlock(opt=opt, in_channels=opt.width)
+
+    def forward(self, _x):
+        _x = _x.view(_x.shape[0], 1, 28*28)
+        _x = torch.matmul(_x, self.orth_mat)
+        _out = _x.view(_x.size(0), -1)
+        _out = self.input(_out)
+        _out = self.hidden1(_out)
+        _out = self.final(_out)
+        return _out
+##############################
 
 def experiment(opt, class_mask, train_loader, test_loader, model, logger, num_passes):
     best_prec1 = 0.0
@@ -143,7 +165,11 @@ if __name__ == '__main__':
     else: 
         opt.num_classes = opt.num_classes_per_task*opt.num_tasks
         if opt.inp_size == 28: 
-            model = getattr(mnist, opt.model)(opt)
+            if opt.model == 'ELM_mnist':
+                print('ELM_mnist')
+                model = ELM_mnist(opt)
+            else:
+                model = getattr(mnist, opt.model)(opt)
         if opt.inp_size == 32 or opt.inp_size == 64: model = getattr(cifar, opt.model)(opt)
         if opt.inp_size ==224: model = getattr(imagenet, opt.model)(opt)  
     
