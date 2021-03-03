@@ -1,0 +1,9 @@
+Approach,EmbeddingSize,MemoyExamples,Accuracy
+Resize,1,391168,0.215
+Resize,2,97792,0.271
+Resize,3,43463,0.835
+Resize,4,24448,0.951
+Resize,8,6112,0.988
+Resize,12,2716,0.989
+Resize,16,1528,0.988
+Resize,24,680,0.986
