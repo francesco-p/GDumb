@@ -7,6 +7,8 @@ from torch import nn, optim
 from opts import parse_args
 from utils import AverageMeter, get_accuracy, cutmix_data, get_logger, seed_everything, save_model, load_model
 from models.layers import FCBlock, FinalBlock
+import torchvision
+
 
 
 ##############################
@@ -96,6 +98,7 @@ def train(opt, loader, model, criterion, optimizer, epoch, logger):
         start = time.time()
 
         for inputs, labels in loader:
+
             # Tweak inputs
             inputs, labels = inputs.half().cuda(non_blocking=True), (labels).cuda(non_blocking=True)
             do_cutmix = opt.regularization == 'cutmix' and np.random.rand(1) < opt.cutmix_prob
@@ -125,6 +128,16 @@ if __name__ == '__main__':
     # Parse arguments
     opt = parse_args()
     seed_everything(seed=opt.seed)
+
+
+    #############
+    if opt.encode:
+        encoder = torchvision.models.resnet18(pretrained=True)
+        encoder.fc = nn.Linear(in_features=512, out_features=opt.emb)
+        encoder = encoder.half().cuda()
+        encoder.eval()
+    ##############
+
 
     # Setup logger
     console_logger = get_logger(folder=opt.log_dir+'/'+opt.exp_name+'/')

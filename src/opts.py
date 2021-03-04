@@ -20,6 +20,8 @@ def parse_args():
     parser.add_argument('--exp_name', type=str, default='test', help='Experiment name')
     parser.add_argument('--old_exp_name', type=str, default='test', help='Name of experiment to take pretrained model from')
     parser.add_argument('--emb', type=int, default=128, help='Embedding Size')
+    parser.add_argument('--encode', action="store_true", help='Applies encoder before running the method')
+    parser.add_argument('--insize', type=int, default=1, help='MLP input Size')
 
     # Default experiment options
     parser.add_argument('--maxlr', type=float, default=0.05, help='Starting Learning rate')
