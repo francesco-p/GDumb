@@ -14,10 +14,11 @@ sns.lineplot(
         markers=True, dashes=True
 )
 
-ax.axhline(y=0.35, color='black', label='SOTA')
+ax.axhline(y=0.35, color='black', label='SOTA (ResNet)')
 ax.set_ylim([0.10, 0.7])
 ax.set_xscale('log', base=10)
 ax.set_title("CIFAR10 Fixed 600 KiB Memory")
+ax.legend()
 
 plt.savefig('/tmp/cifar.png')
 plt.close()

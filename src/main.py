@@ -8,6 +8,13 @@ from opts import parse_args
 from utils import AverageMeter, get_accuracy, cutmix_data, get_logger, seed_everything, save_model, load_model
 from models.layers import FCBlock, FinalBlock
 import torchvision
+import torch.nn.functional as F
+
+def encode(batch, encoder):
+    batch = encoder(batch)
+    bs,c,h,w = batch.shape
+    enc = F.adaptive_avg_pool1d(batch.view(bs, h*w, -1).permute(0, 2, 1), output_size=3).permute(0, 2, 1).view(bs, 3, h, w)
+    return enc
 
 
 
@@ -73,6 +80,10 @@ def test(loader, model, criterion, class_mask, logger, epoch):
         with torch.no_grad():
             start = time.time()
             for inputs, labels in loader:
+
+                if opt.encode:
+                    inputs = encode(inputs, encoder)
+
                 # Get outputs
                 inputs, labels = inputs.half().cuda(non_blocking=True), labels.cuda(non_blocking=True)
                 outputs = model(inputs)
@@ -99,6 +110,9 @@ def train(opt, loader, model, criterion, optimizer, epoch, logger):
 
         for inputs, labels in loader:
 
+            if opt.encode:
+                inputs = encode(inputs, encoder)
+
             # Tweak inputs
             inputs, labels = inputs.half().cuda(non_blocking=True), (labels).cuda(non_blocking=True)
             do_cutmix = opt.regularization == 'cutmix' and np.random.rand(1) < opt.cutmix_prob
@@ -123,21 +137,14 @@ def train(opt, loader, model, criterion, optimizer, epoch, logger):
             .format(epoch, batch_time=batch_time, data_time=data_time, loss=losses))
         return model, optimizer
 
-
 if __name__ == '__main__':
     # Parse arguments
     opt = parse_args()
     seed_everything(seed=opt.seed)
 
-
-    #############
     if opt.encode:
-        encoder = torchvision.models.resnet18(pretrained=True)
-        encoder.fc = nn.Linear(in_features=512, out_features=opt.emb)
-        encoder = encoder.half().cuda()
+        encoder = nn.Sequential(*list(torchvision.models.resnet18(pretrained=True).children()))[:5]
         encoder.eval()
-    ##############
-
 
     # Setup logger
     console_logger = get_logger(folder=opt.log_dir+'/'+opt.exp_name+'/')
