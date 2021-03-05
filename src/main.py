@@ -13,10 +13,8 @@ import torch.nn.functional as F
 def encode(batch, encoder):
     batch = encoder(batch)
     bs,c,h,w = batch.shape
-    enc = F.adaptive_avg_pool1d(batch.view(bs, h*w, -1).permute(0, 2, 1), output_size=3).permute(0, 2, 1).view(bs, 3, h, w)
+    enc = F.adaptive_avg_pool1d(batch.view(bs, c, h*w).permute(0, 2, 1), output_size=3).permute(0, 2, 1).view(bs, 3, h, w)
     return enc
-
-
 
 ##############################
 class ELM_mnist(nn.Module):
@@ -143,7 +141,7 @@ if __name__ == '__main__':
     seed_everything(seed=opt.seed)
 
     if opt.encode:
-        encoder = nn.Sequential(*list(torchvision.models.resnet18(pretrained=True).children()))[:5]
+        encoder = nn.Sequential(*list(torchvision.models.resnet18(pretrained=True).children()))[:-opt.encode_lvl]
         encoder.eval()
 
     # Setup logger
