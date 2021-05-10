@@ -23,15 +23,15 @@ class VisionDataset(object):
         # Generates the standard data augmentation transforms
         train_augment, test_augment = get_augment_transforms(dataset=opt.dataset, inp_sz=opt.inp_size)
 
-
-        if opt.resize != -1:
+        if opt.compress and opt.dataset == 'MNIST':
+            self.train_transforms = torchvision.transforms.Compose(train_augment + [torchvision.transforms.ToTensor()])
+            self.test_transforms = torchvision.transforms.Compose(test_augment + [torchvision.transforms.ToTensor()])
+        elif opt.resize != -1:
             self.train_transforms = torchvision.transforms.Compose(train_augment + [torchvision.transforms.Resize([opt.resize, opt.resize]), torchvision.transforms.ToTensor(), torchvision.transforms.Normalize(mean, std)])
             self.test_transforms = torchvision.transforms.Compose(test_augment + [torchvision.transforms.Resize([opt.resize, opt.resize]), torchvision.transforms.ToTensor(), torchvision.transforms.Normalize(mean, std)])
         else:
             self.train_transforms = torchvision.transforms.Compose(train_augment + [torchvision.transforms.ToTensor(), torchvision.transforms.Normalize(mean, std)])
             self.test_transforms = torchvision.transforms.Compose(test_augment + [torchvision.transforms.ToTensor(), torchvision.transforms.Normalize(mean, std)])
-            
-
 
         # Creates the supervised baseline dataloader (upper bound for continual learning methods)
         self.supervised_trainloader = self.get_loader(indices=None, transforms=self.train_transforms, train=True)
@@ -156,7 +156,7 @@ def get_statistics(dataset):
     '''
     Returns statistics of the dataset given a string of dataset name. To add new dataset, please add required statistics here
     '''
-    assert(dataset in ['MNIST', 'KMNIST', 'EMNIST', 'FashionMNIST', 'SVHN', 'CIFAR10', 'CIFAR100', 'CINIC10', 'ImageNet100', 'ImageNet', 'TinyImagenet'])
+    assert(dataset in ['MNIST', 'KMNIST', 'EMNIST', 'FashionMNIST', 'SVHN', 'CIFAR10', 'CIFAR100', 'CINIC10', 'ImageNet100', 'ImageNet', 'TinyImagenet', 'TinyImagenet100', 'Core50'])
     mean = {
             'MNIST':(0.1307,),
             'KMNIST':(0.1307,),
@@ -167,8 +167,10 @@ def get_statistics(dataset):
             'CIFAR100':(0.5071, 0.4867, 0.4408),
             'CINIC10':(0.47889522, 0.47227842, 0.43047404),
             'TinyImagenet':(0.4802, 0.4481, 0.3975),
+            'TinyImagenet100':(0.4802, 0.4481, 0.3975),
             'ImageNet100':(0.485, 0.456, 0.406),
             'ImageNet':(0.485, 0.456, 0.406),
+            'Core50':(0.60010594, 0.57207793, 0.54166424)
         }
 
     std = {
@@ -181,8 +183,10 @@ def get_statistics(dataset):
             'CIFAR100':(0.2675, 0.2565, 0.2761),
             'CINIC10':(0.24205776, 0.23828046, 0.25874835),
             'TinyImagenet':(0.2302, 0.2265, 0.2262),
+            'TinyImagenet100':(0.2302, 0.2265, 0.2262),
             'ImageNet100':(0.229, 0.224, 0.225),
             'ImageNet':(0.229, 0.224, 0.225),
+            'Core50':(0.10679197, 0.10496728, 0.10731174)
         }
 
     classes = {
@@ -195,8 +199,10 @@ def get_statistics(dataset):
             'CIFAR100': 100,
             'CINIC10': 10,
             'TinyImagenet':200,
+            'TinyImagenet100':100,
             'ImageNet100':100,
             'ImageNet': 1000,
+            'Core50':50
         }
 
     in_channels = {
@@ -209,8 +215,10 @@ def get_statistics(dataset):
             'CIFAR100': 3,
             'CINIC10': 3,
             'TinyImagenet':3,
+            'TinyImagenet100':3,
             'ImageNet100':3,
             'ImageNet': 3,
+            'Core50':3
         }
 
     inp_size = {
@@ -223,7 +231,9 @@ def get_statistics(dataset):
             'CIFAR100': 32,
             'CINIC10': 32,
             'TinyImagenet':64,
+            'TinyImagenet100':64,
             'ImageNet100':224,
             'ImageNet': 224,
+            'Core50':128
         }
     return mean[dataset], std[dataset], classes[dataset],  inp_size[dataset], in_channels[dataset]

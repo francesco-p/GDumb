@@ -6,7 +6,7 @@ sns.set()
 
 df = pd.read_csv('./cifar10_600kib.csv',)
 
-fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7,5))
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(9,7))
 sns.lineplot(
         data=df,
         ax=ax,
@@ -15,6 +15,7 @@ sns.lineplot(
 )
 
 ax.axhline(y=0.35, color='black', label='SOTA (ResNet)')
+ax.axhline(y=0.285, color='purple', label='Compression+MLP')
 ax.set_ylim([0.10, 0.7])
 ax.set_xscale('log', base=10)
 ax.set_title("CIFAR10 Fixed 600 KiB Memory")

@@ -1,0 +1,34 @@
+############ MNIST #############
+Encoder+MLP,512,382,0.916
+Encoder+MLP,256,764,0.943
+Encoder+MLP,128,1528,0.965
+Encoder+MLP,64,3056,0.976
+Encoder+MLP,32,6112,0.981
+Encoder+MLP,16,12224,0.987
+Encoder+MLP,8,24448,0.989
+############ CIFAR #############
+Encoder+MLP,32,9600,0.482
+Encoder+MLP,32,9600,0.493
+Encoder+MLP,32,9600,0.482
+Encoder+MLP,32,9600,0.483
+Encoder+MLP,32,9600,0.483
+Encoder+MLP,64,4800,0.531
+Encoder+MLP,64,4800,0.527
+Encoder+MLP,64,4800,0.527
+Encoder+MLP,64,4800,0.541
+Encoder+MLP,64,4800,0.527
+Encoder+MLP,128,2400,0.539
+Encoder+MLP,128,2400,0.541
+Encoder+MLP,128,2400,0.529
+Encoder+MLP,128,2400,0.531
+Encoder+MLP,128,2400,0.536
+Encoder+MLP,256,1200,0.527
+Encoder+MLP,256,1200,0.529
+Encoder+MLP,256,1200,0.523  
+Encoder+MLP,256,1200,0.523  
+Encoder+MLP,256,1200,0.531  
+Encoder+MLP,512,600,0.504
+Encoder+MLP,512,600,0.506
+Encoder+MLP,512,600,0.503
+Encoder+MLP,512,600,0.499
+Encoder+MLP,512,600,0.503

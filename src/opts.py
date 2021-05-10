@@ -5,7 +5,7 @@ def parse_args():
     # Changing options -- Apart from these arguments, we do not mess with other arguments
     parser.add_argument('--data_dir', type=str, default='/home/fpelosin/Documents/GDumb/data', help='Directory where all datasets are stored')
     parser.add_argument('--log_dir', type=str, default='../../../logs/', help='Directory where all logs are stored')
-    parser.add_argument('--dataset', type=str, required=True, help='Name of dataset', choices=['MNIST', 'CIFAR10', 'CIFAR100', 'SVHN', 'TinyImagenet', 'ImageNet100', 'ImageNet'])
+    parser.add_argument('--dataset', type=str, required=True, help='Name of dataset', choices=['MNIST', 'CIFAR10', 'CIFAR100', 'SVHN', 'TinyImagenet', 'TinyImagenet100', 'ImageNet100', 'ImageNet', 'Core50'])
     parser.add_argument('--num_classes_per_task', type=int, required=True, help='Number of classes per task')
     parser.add_argument('--num_tasks', type=int, required=True, help='Number of tasks')
     parser.add_argument('--num_pretrain_classes', type=int, default=0, help='Number of pretraining classes')
@@ -13,7 +13,7 @@ def parse_args():
     parser.add_argument('--num_passes', type=int, required=True, help='Number of passes to train over the storage')
     parser.add_argument('--num_pretrain_passes', type=int, default=0, help='Number of passes to train over the storage')
     parser.add_argument('--regularization', type=str, default='none', choices=['none', 'cutmix'], help='Regularization types')
-    parser.add_argument('--model', type=str, default='MLP', choices=['MLP', 'ResNet', 'DenseNet', 'NIN', 'ELM_mnist'], help='Model architecture')
+    parser.add_argument('--model', type=str, default='MLP', choices=['MLP', 'ResNet', 'DenseNet', 'NIN', 'ELM_mnist', 'ELM_tinyimgnet', 'ELM_cifar', 'ELM_core'], help='Model architecture')
     parser.add_argument('--depth', type=int, default=0, help='Depth of the model')
     parser.add_argument('--width', type=int, default=0, help='Width of a model')
     parser.add_argument('--seed', type=int, default=0, help='Seed for reproducibility of class-setting etc')
@@ -23,6 +23,9 @@ def parse_args():
     parser.add_argument('--encode', action="store_true", help='Applies encoder before running the method')
     parser.add_argument('--encode_lvl', type=int, default=5, help='ResNet block to cut')
     parser.add_argument('--insize', type=int, default=1, help='MLP input Size')
+
+    # Img compression
+    parser.add_argument('--compress', action="store_true", help='Applies compression')
 
     # Default experiment options
     parser.add_argument('--maxlr', type=float, default=0.05, help='Starting Learning rate')

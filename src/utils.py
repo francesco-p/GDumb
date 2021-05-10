@@ -5,6 +5,18 @@ import os
 import logging
 from torch import nn
 
+
+
+def majority_vote(y_preds):
+
+    major_ys = torch.zeros(y_preds.shape[1])
+    for i in range(y_preds.shape[1]):
+        cls, counts = y_preds[:, i].unique(return_counts=True)
+        major_y = cls[counts.argmax()].item()
+        major_ys[i] = major_y
+
+    return major_ys
+
 class AverageMeter:
     # Sourced from: https://github.com/pytorch/examples/blob/master/imagenet/main.py
     def __init__(self):

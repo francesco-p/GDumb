@@ -1,0 +1,10 @@
+Approach,EmbeddingSize,MemoryExamples,Accuracy
+ELM,64,4800,0.155
+ELM,128,2400,0.224
+ELM,256,1200,0.116
+Resize+ResNet,8,16000,0.383
+Resize+ResNet,16,4000,0.300
+Resize+ResNet,28,1306,187
+Feature+ResNet,16_8,4000,0.325
+Feature+ResNet,8_6,16000,0.
+

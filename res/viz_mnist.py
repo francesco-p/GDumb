@@ -6,7 +6,7 @@ sns.set()
 
 df = pd.read_csv('./mnist_382kib.csv',)
 
-fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7,5))
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(9,7))
 sns.lineplot(
         data=df,
         ax=ax,
@@ -15,6 +15,7 @@ sns.lineplot(
 )
 
 ax.axhline(y=0.919, color='black', label='SOTA (MLP)')
+ax.axhline(y=0.985, color='purple', label='ResNet')
 ax.set_ylim([0.9, 1])
 ax.set_xscale('log', base=10)
 ax.set_title("MNIST Fixed 382 KiB Memory")

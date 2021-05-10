@@ -8,7 +8,29 @@ from opts import parse_args
 from utils import AverageMeter, get_accuracy, cutmix_data, get_logger, seed_everything, save_model, load_model
 from models.layers import FCBlock, FinalBlock
 import torchvision
+from torchvision.utils import save_image
 import torch.nn.functional as F
+import compressai
+import compressai.zoo as zoo
+from models.vae import VAE1C
+
+def compress(batch, model):
+    # import ipdb
+    # ipdb.set_trace()
+
+    # Cifar10 (bs,1280) out
+    bs,c,h,w = batch.shape
+    #out = model(batch).view(bs, -1)
+
+    # Vae + mlp
+    out = model(batch.cuda())
+    #save_image(out[0].view(-1,1,28,28).cpu(), f"/tmp/{id(out)}.png")
+    out = model.reparameterize(out[1], out[2]).view(bs, -1)
+
+    # vae + resnet
+    #out = out[0].view(bs,c,h,w)
+    return out
+
 
 def encode(batch, encoder):
     batch = encoder(batch)
@@ -17,11 +39,12 @@ def encode(batch, encoder):
     return enc
 
 ##############################
+
 class ELM_mnist(nn.Module):
     def __init__(self, opt):
         super(ELM_mnist, self).__init__()
-        self.orth_mat = torch.nn.init.orthogonal_(torch.empty(28*28, opt.emb)).to(torch.float16).to('cuda')
 
+        self.orth_mat = torch.nn.init.orthogonal_(torch.empty(28*28, opt.emb)).to(torch.float16).to('cuda')
         self.input = FCBlock(opt=opt, in_channels=opt.emb, out_channels=opt.width)
         self.hidden1 = FCBlock(opt=opt, in_channels=opt.width, out_channels=opt.width)
         self.final = FinalBlock(opt=opt, in_channels=opt.width)
@@ -34,6 +57,67 @@ class ELM_mnist(nn.Module):
         _out = self.hidden1(_out)
         _out = self.final(_out)
         return _out
+
+##############################
+
+class ELM_cifar(nn.Module):
+    def __init__(self, opt):
+        super(ELM_cifar, self).__init__()
+
+        self.orth_mat = torch.nn.init.orthogonal_(torch.empty(32*32*3, opt.emb)).to(torch.float16).to('cuda')
+        self.input = FCBlock(opt=opt, in_channels=opt.emb, out_channels=opt.width)
+        self.hidden1 = FCBlock(opt=opt, in_channels=opt.width, out_channels=opt.width)
+        self.final = FinalBlock(opt=opt, in_channels=opt.width)
+
+    def forward(self, _x):
+        _x = _x.view(_x.shape[0], 1, 32*32*3)
+        _x = torch.matmul(_x, self.orth_mat)
+        _out = _x.view(_x.size(0), -1)
+        _out = self.input(_out)
+        _out = self.hidden1(_out)
+        _out = self.final(_out)
+        return _out
+
+##############################
+
+class ELM_core(nn.Module):
+    def __init__(self, opt):
+        super(ELM_core, self).__init__()
+
+        self.orth_mat = torch.nn.init.orthogonal_(torch.empty(128*128*3, opt.emb)).to(torch.float16).to('cuda')
+        self.input = FCBlock(opt=opt, in_channels=opt.emb, out_channels=opt.width)
+        self.hidden1 = FCBlock(opt=opt, in_channels=opt.width, out_channels=opt.width)
+        self.final = FinalBlock(opt=opt, in_channels=opt.width)
+
+    def forward(self, _x):
+        _x = _x.view(_x.shape[0], 1, 128*128*3)
+        _x = torch.matmul(_x, self.orth_mat)
+        _out = _x.view(_x.size(0), -1)
+        _out = self.input(_out)
+        _out = self.hidden1(_out)
+        _out = self.final(_out)
+        return _out
+
+##############################
+
+class ELM_tinyimgnet(nn.Module):
+    def __init__(self, opt):
+        super(ELM_tinyimgnet, self).__init__()
+
+        self.orth_mat = torch.nn.init.orthogonal_(torch.empty(64*64*3, opt.emb)).to(torch.float16).to('cuda')
+        self.input = FCBlock(opt=opt, in_channels=opt.emb, out_channels=opt.width)
+        self.hidden1 = FCBlock(opt=opt, in_channels=opt.width, out_channels=opt.width)
+        self.final = FinalBlock(opt=opt, in_channels=opt.width)
+
+    def forward(self, _x):
+        _x = _x.view(_x.shape[0], 1, 64*64*3)
+        _x = torch.matmul(_x, self.orth_mat)
+        _out = _x.view(_x.size(0), -1)
+        _out = self.input(_out)
+        _out = self.hidden1(_out)
+        _out = self.final(_out)
+        return _out
+
 ##############################
 
 def experiment(opt, class_mask, train_loader, test_loader, model, logger, num_passes):
@@ -81,6 +165,8 @@ def test(loader, model, criterion, class_mask, logger, epoch):
 
                 if opt.encode:
                     inputs = encode(inputs, encoder)
+                if opt.compress:
+                    inputs = compress(inputs, compresser)
 
                 # Get outputs
                 inputs, labels = inputs.half().cuda(non_blocking=True), labels.cuda(non_blocking=True)
@@ -110,6 +196,8 @@ def train(opt, loader, model, criterion, optimizer, epoch, logger):
 
             if opt.encode:
                 inputs = encode(inputs, encoder)
+            if opt.compress:
+                inputs = compress(inputs, compresser)
 
             # Tweak inputs
             inputs, labels = inputs.half().cuda(non_blocking=True), (labels).cuda(non_blocking=True)
@@ -131,6 +219,9 @@ def train(opt, loader, model, criterion, optimizer, epoch, logger):
             batch_time.update(time.time() - start)
             start = time.time()
 
+            #print((torch.cuda.max_memory_allocated(device=None))/(1024**2))
+
+
         logger.info('==> Train:[{0}]\tTime:{batch_time.sum:.4f}\tData:{data_time.sum:.4f}\tLoss:{loss.avg:.4f}\t'
             .format(epoch, batch_time=batch_time, data_time=data_time, loss=losses))
         return model, optimizer
@@ -143,6 +234,14 @@ if __name__ == '__main__':
     if opt.encode:
         encoder = nn.Sequential(*list(torchvision.models.resnet18(pretrained=True).children()))[:-opt.encode_lvl]
         encoder.eval()
+
+    if opt.compress:
+        #compresser = zoo.mbt2018_mean(6, metric='mse', pretrained=True).g_a
+        #compresser.eval()
+        fname = f'../../models/vae_kmnist_{opt.emb}.pt'
+        compresser = VAE1C(opt.emb).to('cuda')
+        compresser.load_state_dict(torch.load(fname))
+        compresser.eval()
 
     # Setup logger
     console_logger = get_logger(folder=opt.log_dir+'/'+opt.exp_name+'/')
@@ -188,8 +287,20 @@ if __name__ == '__main__':
                 model = ELM_mnist(opt)
             else:
                 model = getattr(mnist, opt.model)(opt)
-        if opt.inp_size == 32 or opt.inp_size == 64: model = getattr(cifar, opt.model)(opt)
+        if opt.inp_size == 32 or opt.inp_size == 64 or opt.inp_size == 128: 
+            if opt.model == 'ELM_core':
+                print('ELM_core')
+                model = ELM_core(opt)
+            if opt.model == 'ELM_tinyimgnet':
+                print('ELM_tinyimgnet')
+                model = ELM_tinyimgnet(opt)
+            if opt.model == 'ELM_cifar':
+                print('ELM_cifar')
+                model = ELM_cifar(opt)
+            elif 'ELM' not in opt.model:
+                model = getattr(cifar, opt.model)(opt)
         if opt.inp_size ==224: model = getattr(imagenet, opt.model)(opt)  
+
     
     console_logger.debug("==> Starting Continual Learning Training..")
     best_acc1, model = experiment(opt=opt, class_mask=dobj.class_mask, train_loader=dobj.cltrain_loader, test_loader=dobj.cltest_loader, \
